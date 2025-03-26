@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Smartschool Tweaks",
   "version": "1.0.0",
-  "description": "Extension for enhancing Smartschool experience",
+  "description": "Aanpasbare profielfoto's en weergavenamen voor Smartschool.",
   "permissions": ["storage", "activeTab", "scripting", "declarativeNetRequest"],
   "host_permissions": ["*://*.smartschool.be/*"],
   "action": {
