@@ -3,7 +3,7 @@
   "name": "Smartschool Tweaks",
   "version": "1.0.0",
   "description": "Extension for enhancing Smartschool experience",
-  "permissions": ["storage", "cookies", "activeTab", "scripting", "declarativeNetRequest"],
+  "permissions": ["storage", "activeTab", "scripting", "declarativeNetRequest"],
   "host_permissions": ["*://*.smartschool.be/*"],
   "action": {
     "default_popup": "index.html",
