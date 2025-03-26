@@ -1,0 +1,31 @@
+{
+  "name": "smartschool-tweaks",
+  "version": "1.0.0",
+  "description": "Browser extension for enhancing Smartschool experience",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "concurrently \"bun run dev:ts\" \"bun run dev:css\"",
+    "dev:ts": "bun build --watch ./src/background.ts ./src/content.ts ./src/index.ts --outdir ./dist --target browser",
+    "dev:css": "tailwindcss -i ./src/tailwind.css -o ./styles.css --watch",
+    "build": "bun build ./src/background.ts ./src/content.ts ./src/index.ts --outdir ./dist --target browser && tailwindcss -i ./src/tailwind.css -o ./styles.css && powershell -Command \"Compress-Archive -Path manifest.json, index.html, styles.css, dist, icons -DestinationPath smartschool-tweaks.zip -Force\""
+  },
+  "keywords": [
+    "smartschool",
+    "browser-extension",
+    "chrome-extension",
+    "education",
+    "utility"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@shadcn/ui": "^0.0.4",
+    "@types/chrome": "^0.0.258",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^9.1.2",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.3.3"
+  }
+}
