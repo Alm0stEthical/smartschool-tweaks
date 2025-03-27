@@ -21,6 +21,17 @@ console.log("[SmartSchool Tweaks] Content script loaded");
       }
     }
 
+    if (
+      globalSettings?.fakeMsgCounter &&
+      globalSettings.msgCounterValue !== undefined
+    ) {
+      console.log(
+        "[SmartSchool Tweaks] Fake message counter enabled, value:",
+        globalSettings.msgCounterValue
+      );
+      setupMessageCounterModification(globalSettings.msgCounterValue);
+    }
+
     if (globalSettings?.nameChanger && globalSettings.customName) {
       console.log(
         "[SmartSchool Tweaks] Name changer enabled, custom name:",
@@ -535,6 +546,60 @@ function applyNameChange(customName: string): void {
   console.log(`[SmartSchool Tweaks] Applied ${changesCount} name changes`);
 }
 
+function setupMessageCounterModification(counterValue: number): void {
+  const updateMessageCounter = () => {
+    try {
+      let messagesCounterKey = null;
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.includes("MessagesCounter")) {
+          messagesCounterKey = key;
+          break;
+        }
+      }
+
+      if (messagesCounterKey) {
+        const currentData = sessionStorage.getItem(messagesCounterKey);
+        if (currentData) {
+          try {
+            const parsedData = JSON.parse(currentData);
+            if (
+              parsedData &&
+              typeof parsedData === "object" &&
+              "module" in parsedData &&
+              parsedData.module === "Messages"
+            ) {
+              parsedData.counter = counterValue;
+              sessionStorage.setItem(
+                messagesCounterKey,
+                JSON.stringify(parsedData)
+              );
+              console.log(
+                "[SmartSchool Tweaks] Updated message counter to:",
+                counterValue
+              );
+            }
+          } catch (e) {
+            console.error(
+              "[SmartSchool Tweaks] Error parsing message counter data:",
+              e
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[SmartSchool Tweaks] Error updating message counter:", e);
+    }
+  };
+
+  updateMessageCounter();
+
+  setInterval(updateMessageCounter, 5000);
+
+  window.addEventListener("load", updateMessageCounter);
+  window.addEventListener("popstate", updateMessageCounter);
+}
+
 async function init(): Promise<void> {
   try {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -575,6 +640,12 @@ function applyChanges(): void {
 function applySettings(settings: Settings): void {
   globalSettings = settings;
   applyChanges();
+
+  if (settings.fakeMsgCounter && settings.msgCounterValue !== undefined) {
+    setupMessageCounterModification(settings.msgCounterValue);
+  }
+
+  location.reload();
 }
 
 async function getSettings(): Promise<Settings> {

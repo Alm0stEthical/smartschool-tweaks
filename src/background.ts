@@ -5,6 +5,8 @@ chrome.runtime.onInstalled.addListener(async () => {
     nameChanger: false,
     customName: "",
     pfpChanger: false,
+    fakeMsgCounter: false,
+    msgCounterValue: 0,
   };
 
   chrome.storage.sync.get("settings", (result) => {

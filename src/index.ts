@@ -21,6 +21,16 @@ const pfpFileName = document.getElementById("pfpFileName") as HTMLSpanElement;
 const pfpPreview = document.getElementById("pfpPreview") as HTMLImageElement;
 const pfpPlaceholder = document.getElementById("pfpPlaceholder") as HTMLElement;
 
+const fakeMsgCounterToggle = document.getElementById(
+  "fake-msg-counter-toggle"
+) as HTMLInputElement;
+const fakeMsgCounterSection = document.getElementById(
+  "fake-msg-counter-section"
+) as HTMLDivElement;
+const msgCounterValueInput = document.getElementById(
+  "msg-counter-value"
+) as HTMLInputElement;
+
 const saveButton = document.getElementById(
   "save-settings"
 ) as HTMLButtonElement;
@@ -51,6 +61,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
+    fakeMsgCounterToggle.checked = settings.fakeMsgCounter || false;
+    if (settings.fakeMsgCounter) {
+      msgCounterValueInput.value = (settings.msgCounterValue || 0).toString();
+      fakeMsgCounterSection.classList.remove("hidden");
+    }
+
     console.log("Settings loaded:", settings);
 
     setupEventListeners();
@@ -77,7 +93,28 @@ function setupEventListeners(): void {
     }
   });
 
+  fakeMsgCounterToggle.addEventListener("change", () => {
+    if (fakeMsgCounterToggle.checked) {
+      fakeMsgCounterSection.classList.remove("hidden");
+    } else {
+      fakeMsgCounterSection.classList.add("hidden");
+    }
+  });
+
   pfpFileInput.addEventListener("change", handleProfilePictureChange);
+
+  msgCounterValueInput.addEventListener("input", () => {
+    let value = msgCounterValueInput.value;
+
+    value = value.replace(/[^0-9]/g, "");
+
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 0) {
+      msgCounterValueInput.value = numValue.toString();
+    } else {
+      msgCounterValueInput.value = "0";
+    }
+  });
 
   saveButton.addEventListener("click", saveAllSettings);
 }
@@ -108,10 +145,14 @@ function handleProfilePictureChange(event: Event): void {
 
 async function saveAllSettings(): Promise<void> {
   try {
+    const msgCounterValue = parseInt(msgCounterValueInput.value, 10);
+
     const settings: Settings = {
       nameChanger: nameChangerToggle.checked,
       customName: customNameInput.value,
       pfpChanger: pfpChangerToggle.checked,
+      fakeMsgCounter: fakeMsgCounterToggle.checked,
+      msgCounterValue: isNaN(msgCounterValue) ? 0 : msgCounterValue,
 
       autoLogin: false,
       username: "",
@@ -154,6 +195,8 @@ async function getSettings(): Promise<Settings> {
           nameChanger: false,
           customName: "",
           pfpChanger: false,
+          fakeMsgCounter: false,
+          msgCounterValue: 0,
 
           autoLogin: false,
           username: "",
