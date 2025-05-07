@@ -103,6 +103,9 @@ function setupEventListeners(): void {
 
   pfpFileInput.addEventListener("change", handleProfilePictureChange);
 
+  // setup drag and drop for profile picture
+  setupDragAndDrop();
+
   msgCounterValueInput.addEventListener("input", () => {
     let value = msgCounterValueInput.value;
 
@@ -119,28 +122,114 @@ function setupEventListeners(): void {
   saveButton.addEventListener("click", saveAllSettings);
 }
 
+function setupDragAndDrop(): void {
+  const dropZone = pfpChangerSection;
+
+  // prevent default drag behaviors to allow our custom drop
+  ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+  });
+
+  // highlight drop area on hover
+  ["dragenter", "dragover"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, highlight, false);
+  });
+
+  ["dragleave", "drop"].forEach((eventName) => {
+    dropZone.addEventListener(eventName, unhighlight, false);
+  });
+
+  // handle the actual drop
+  dropZone.addEventListener("drop", handleDrop, false);
+
+  function preventDefaults(e: Event): void {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function highlight(): void {
+    // highlight the drop zone when dragging over it
+    dropZone.classList.add('bg-slate-100');
+    dropZone.classList.remove('bg-slate-50');
+    dropZone.classList.remove('border-slate-200');
+    dropZone.classList.add('border-primary');
+  }
+  
+  function unhighlight(): void {
+    // reset the drop zone styling when drag leaves
+    dropZone.classList.remove('bg-slate-100');
+    dropZone.classList.add('bg-slate-50');
+    dropZone.classList.remove('border-primary');
+    dropZone.classList.add('border-slate-200');
+  }
+
+  function handleDrop(e: DragEvent): void {
+    if (!e.dataTransfer) return;
+
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        processProfilePicture(file);
+      } else {
+        showStatus("Alleen afbeeldingen zijn toegestaan", "error");
+      }
+    }
+  }
+}
+
 function handleProfilePictureChange(event: Event): void {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
 
   if (file) {
-    pfpFileName.textContent = file.name;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        pfpPreview.src = result;
-        pfpPreview.classList.remove("hidden");
-        pfpPlaceholder.classList.add("hidden");
-      }
-    };
-    reader.readAsDataURL(file);
+    processProfilePicture(file);
   } else {
     pfpFileName.textContent = "Geen bestand gekozen";
     pfpPreview.classList.add("hidden");
     pfpPlaceholder.classList.remove("hidden");
   }
+}
+
+async function processProfilePicture(file: File): Promise<void> {
+  pfpFileName.textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const result = e.target?.result as string;
+    if (result) {
+      pfpPreview.src = result;
+      pfpPreview.classList.remove("hidden");
+      pfpPlaceholder.classList.add("hidden");
+
+      // auto-save the profile picture
+      if (pfpChangerToggle.checked) {
+        try {
+          await saveProfilePicture(result);
+
+          // update settings to ensure pfpChanger is enabled
+          const currentSettings = await getSettings();
+          if (!currentSettings.pfpChanger) {
+            await saveSettings({
+              ...currentSettings,
+              pfpChanger: true,
+            });
+          }
+
+          showStatus("Profielfoto automatisch opgeslagen!", "success");
+
+          // update active tab if on smartschool
+          updateActiveTab();
+        } catch (error) {
+          console.error("fuck, failed to save profile pic", error);
+          showStatus("Kon profielfoto niet opslaan", "error");
+        }
+      }
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 async function saveAllSettings(): Promise<void> {
@@ -162,29 +251,28 @@ async function saveAllSettings(): Promise<void> {
 
     await saveSettings(settings);
 
-    if (
-      settings.pfpChanger &&
-      pfpPreview.src &&
-      !pfpPreview.classList.contains("hidden")
-    ) {
-      await saveProfilePicture(pfpPreview.src);
-    }
+    // profile picture is already auto-saved when changed, no need to save again here
 
     showStatus("Instellingen succesvol opgeslagen!", "success");
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
-      if (activeTab?.url?.includes("smartschool.be")) {
-        chrome.tabs.sendMessage(activeTab.id as number, {
-          action: "applySettings",
-          settings,
-        });
-      }
-    });
+    updateActiveTab();
   } catch (error) {
     console.error("Error saving settings:", error);
     showStatus("Error bij het opslaan van instellingen", "error");
   }
+}
+
+function updateActiveTab(): void {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    const activeTab = tabs[0];
+    if (activeTab?.url?.includes("smartschool.be")) {
+      const settings = await getSettings();
+      chrome.tabs.sendMessage(activeTab.id as number, {
+        action: "applySettings",
+        settings,
+      });
+    }
+  });
 }
 
 async function getSettings(): Promise<Settings> {
@@ -230,15 +318,13 @@ async function saveProfilePicture(dataUrl: string): Promise<void> {
 
 function showStatus(message: string, type: "success" | "error"): void {
   statusMessage.textContent = message;
-  statusMessage.classList.remove("hidden", "text-green-600", "text-red-600");
+  statusMessage.classList.remove("hidden", "text-green-600", "text-red-500");
 
   if (type === "success") {
     statusMessage.classList.add("text-green-600");
   } else {
-    statusMessage.classList.add("text-red-600");
+    statusMessage.classList.add("text-red-500");
   }
-
-  statusMessage.classList.remove("hidden");
 
   setTimeout(() => {
     statusMessage.classList.add("hidden");
