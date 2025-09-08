@@ -1,17 +1,28 @@
-import { Settings } from "./types";
+import { Settings } from './types';
 
 chrome.runtime.onInstalled.addListener(async () => {
   const defaultSettings: Settings = {
     nameChanger: false,
-    customName: "",
+    customName: '',
     pfpChanger: false,
     fakeMsgCounter: false,
     msgCounterValue: 0,
   };
 
-  chrome.storage.sync.get("settings", (result) => {
+  chrome.storage.sync.get('settings', (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('storage error:', chrome.runtime.lastError);
+      return;
+    }
     if (!result.settings) {
-      chrome.storage.sync.set({ settings: defaultSettings });
+      chrome.storage.sync.set({ settings: defaultSettings }, () => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            'failed to set default settings:',
+            chrome.runtime.lastError
+          );
+        }
+      });
     }
   });
 
@@ -19,7 +30,14 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 function setupNetworkBlocking(): void {
-  chrome.storage.sync.get("settings", (result) => {
+  chrome.storage.sync.get('settings', (result) => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        'storage error in network blocking setup:',
+        chrome.runtime.lastError
+      );
+      return;
+    }
     const settings = result.settings as Settings | undefined;
 
     if (settings?.pfpChanger) {
@@ -46,11 +64,10 @@ function enableProfilePictureBlocking(): void {
   const rules: chrome.declarativeNetRequest.Rule[] = [
     {
       id: 1,
-      priority: 1,
+      priority: 100,
       action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
       condition: {
-        urlFilter: "userpicture",
-        domains: ["smartschool.be"],
+        urlFilter: '*userpicture*',
         resourceTypes: [
           chrome.declarativeNetRequest.ResourceType.IMAGE,
           chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
@@ -59,11 +76,22 @@ function enableProfilePictureBlocking(): void {
     },
     {
       id: 2,
-      priority: 1,
+      priority: 100,
       action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
       condition: {
-        urlFilter: "hashimage/hash",
-        domains: ["smartschool.be"],
+        urlFilter: '*hashimage/hash*',
+        resourceTypes: [
+          chrome.declarativeNetRequest.ResourceType.IMAGE,
+          chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
+        ],
+      },
+    },
+    {
+      id: 3,
+      priority: 100,
+      action: { type: chrome.declarativeNetRequest.RuleActionType.BLOCK },
+      condition: {
+        urlFilter: '*User/Userimage*',
         resourceTypes: [
           chrome.declarativeNetRequest.ResourceType.IMAGE,
           chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
@@ -74,34 +102,57 @@ function enableProfilePictureBlocking(): void {
 
   chrome.declarativeNetRequest
     .updateDynamicRules({
-      removeRuleIds: [1, 2],
+      removeRuleIds: [1, 2, 3],
       addRules: rules,
     })
     .catch((error) => {
-      console.error("Error setting blocking rules:", error);
+      console.error('error setting blocking rules:', error);
     });
 }
 
 function disableProfilePictureBlocking(): void {
   chrome.declarativeNetRequest
     .updateDynamicRules({
-      removeRuleIds: [1, 2],
+      removeRuleIds: [1, 2, 3],
       addRules: [],
     })
     .catch((error) => {
-      console.error("Error removing blocking rules:", error);
+      console.error('error removing blocking rules:', error);
     });
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "saveSettings") {
+  if (message.action === 'saveSettings') {
     chrome.storage.sync.set({ settings: message.settings }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('failed to save settings:', chrome.runtime.lastError);
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+        return;
+      }
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime.lastError) {
+          console.error('failed to query tabs:', chrome.runtime.lastError);
+          return;
+        }
         if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: "applySettings",
-            settings: message.settings,
-          });
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            {
+              action: 'applySettings',
+              settings: message.settings,
+            },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  'failed to send message to tab:',
+                  chrome.runtime.lastError
+                );
+              }
+            }
+          );
         }
       });
 
@@ -110,14 +161,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message.action === "saveProfilePicture") {
+  if (message.action === 'saveProfilePicture') {
     chrome.storage.local.set({ profilePicture: message.dataUrl }, () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          'failed to save profile picture:',
+          chrome.runtime.lastError
+        );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+        return;
+      }
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime.lastError) {
+          console.error('failed to query tabs:', chrome.runtime.lastError);
+          return;
+        }
         if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: "applySettings",
-            settings: message.settings,
-          });
+          chrome.tabs.sendMessage(
+            tabs[0].id,
+            {
+              action: 'applySettings',
+              settings: message.settings,
+            },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  'failed to send message to tab:',
+                  chrome.runtime.lastError
+                );
+              }
+            }
+          );
         }
       });
 

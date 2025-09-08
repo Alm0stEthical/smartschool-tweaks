@@ -1,18 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smartschool Tweaks</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="public/styles.css" />
     <style>
-      /* Credit banner styling */
       .credit-banner {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         color: white;
         text-align: center;
         padding: 6px;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         position: relative;
         overflow: hidden;
@@ -38,38 +37,46 @@
   </head>
   <body class="bg-slate-50 text-slate-900 min-w-[600px] min-h-screen p-3">
     <div class="container mx-auto max-w-3xl">
-      <!-- Credit Banner -->
       <div class="credit-banner">
-        Created by <span class="developer-name">David Tanasescu</span> •
-        <a href="https://davidtanasescu.com" target="_blank"
-          >davidtanasescu.com</a
+        Gemaakt door de enige echte
+        <a
+          class="developer-name"
+          href="https://davidtanasescu.com"
+          target="_blank"
+          >David Tanasescu</a
         >
       </div>
 
-      <!-- Fixed Save Button -->
       <div
         class="sticky top-0 z-10 bg-slate-50 p-2 mb-2 flex justify-between items-center"
       >
         <h1 class="text-lg font-bold text-primary">Smartschool Tweaks</h1>
         <div class="flex items-center gap-2">
           <div class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-            v1.0.0
+            v2.0.0
           </div>
           <button
+            id="reset-settings"
+            class="px-3 py-2 text-white font-medium rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer"
+            style="background-color: #ef4444; border: none"
+            onmouseover="this.style.backgroundColor='#dc2626'"
+            onmouseout="this.style.backgroundColor='#ef4444'"
+          >
+            Reset
+          </button>
+          <button
             id="save-settings"
-            class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
           >
             Opslaan
           </button>
         </div>
       </div>
 
-      <!-- Main Settings Section -->
       <div
         class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden"
       >
         <div class="p-4 space-y-4">
-          <!-- Name Changer Section -->
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <h2 class="text-base font-medium text-slate-800">
@@ -87,7 +94,6 @@
               </label>
             </div>
 
-            <!-- Name Input -->
             <div id="name-section" class="bg-slate-50 rounded p-2 hidden">
               <div class="space-y-1">
                 <div class="grid gap-1">
@@ -107,7 +113,6 @@
             </div>
           </div>
 
-          <!-- Profile Picture Changer Section -->
           <div class="pt-3 border-t border-slate-200">
             <div class="flex items-center justify-between mb-2">
               <h2 class="text-base font-medium text-slate-800">
@@ -125,7 +130,6 @@
               </label>
             </div>
 
-            <!-- Profile Picture Changer Inputs -->
             <div
               id="pfp-changer-section"
               class="bg-slate-50 rounded p-3 hidden transition-all duration-200 border-2 border-dashed border-slate-200"
@@ -135,7 +139,10 @@
                   <label
                     for="customPfp"
                     class="text-xs font-medium text-slate-700 flex items-center gap-1"
-                    ><span>Upload nieuwe afbeelding</span> <span class="text-primary text-xs">(Sleep & drop of klik)</span></label
+                    ><span>Upload nieuwe afbeelding</span>
+                    <span class="text-primary text-xs"
+                      >(Sleep & drop of klik)</span
+                    ></label
                   >
                   <div class="flex gap-3 items-center">
                     <label
@@ -159,8 +166,19 @@
                     id="pfpPlaceholder"
                     class="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-slate-200"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-8 w-8 text-slate-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
                     </svg>
                   </div>
                   <img
@@ -170,13 +188,13 @@
                   />
                 </div>
                 <p class="text-xs text-slate-500 text-center">
-                  Afbeelding wordt automatisch opgeslagen zonder op de Opslaan knop te drukken
+                  Afbeelding wordt automatisch opgeslagen zonder op de Opslaan
+                  knop te drukken
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Fake Message Counter Section -->
           <div class="pt-3 border-t border-slate-200">
             <div class="flex items-center justify-between mb-2">
               <h2 class="text-base font-medium text-slate-800">Berichten</h2>
@@ -192,7 +210,6 @@
               </label>
             </div>
 
-            <!-- Fake Message Counter Inputs -->
             <div
               id="fake-msg-counter-section"
               class="bg-slate-50 rounded p-2 hidden"
