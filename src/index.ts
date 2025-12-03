@@ -42,6 +42,8 @@ const statusMessage = document.getElementById(
   'status-message'
 ) as HTMLDivElement;
 
+let isInitialLoad = true;
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const settings = await getSettings();
@@ -74,6 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Settings loaded:', settings);
 
     setupEventListeners();
+
+    setTimeout(() => {
+      isInitialLoad = false;
+    }, 100);
   } catch (error) {
     console.error('Error loading settings:', error);
     showStatus('Error bij het laden van instellingen', 'error');
@@ -87,7 +93,9 @@ function setupEventListeners(): void {
     } else {
       nameSection.classList.add('hidden');
     }
-    debouncedAutoSave(() => saveAllSettings(true));
+    if (!isInitialLoad) {
+      debouncedAutoSave(() => saveAllSettings(true));
+    }
   });
 
   pfpChangerToggle.addEventListener('change', () => {
@@ -96,7 +104,9 @@ function setupEventListeners(): void {
     } else {
       pfpChangerSection.classList.add('hidden');
     }
-    debouncedAutoSave(() => saveAllSettings(true));
+    if (!isInitialLoad) {
+      debouncedAutoSave(() => saveAllSettings(true));
+    }
   });
 
   fakeMsgCounterToggle.addEventListener('change', () => {
@@ -105,25 +115,31 @@ function setupEventListeners(): void {
     } else {
       fakeMsgCounterSection.classList.add('hidden');
     }
-    debouncedAutoSave(() => saveAllSettings(true));
+    if (!isInitialLoad) {
+      debouncedAutoSave(() => saveAllSettings(true));
+    }
   });
 
   customNameInput.addEventListener('blur', () => {
-    debouncedAutoSave(() => saveAllSettings(true));
+    if (!isInitialLoad) {
+      debouncedAutoSave(() => saveAllSettings(true));
+    }
   });
 
   customNameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
   msgCounterValueInput.addEventListener('blur', () => {
-    debouncedAutoSave(() => saveAllSettings(true));
+    if (!isInitialLoad) {
+      debouncedAutoSave(() => saveAllSettings(true));
+    }
   });
 
   msgCounterValueInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
@@ -261,11 +277,6 @@ async function saveAllSettings(isAutoSave = false): Promise<void> {
       pfpChanger: pfpChangerToggle.checked,
       fakeMsgCounter: fakeMsgCounterToggle.checked,
       msgCounterValue: isNaN(msgCounterValue) ? 0 : msgCounterValue,
-
-      autoLogin: false,
-      username: '',
-      password: '',
-      school: '',
     };
 
     await saveSettings(settings);
@@ -345,18 +356,14 @@ async function getSettings(): Promise<Settings> {
         return;
       }
       resolve(
-        result.settings || {
-          nameChanger: false,
-          customName: '',
-          pfpChanger: false,
-          fakeMsgCounter: false,
-          msgCounterValue: 0,
-
-          autoLogin: false,
-          username: '',
-          password: '',
-          school: '',
-        }
+        (result.settings as Settings) ||
+          ({
+            nameChanger: false,
+            customName: '',
+            pfpChanger: false,
+            fakeMsgCounter: false,
+            msgCounterValue: 0,
+          } as Settings)
       );
     });
   });
@@ -386,7 +393,7 @@ async function getProfilePicture(): Promise<string> {
         reject(chrome.runtime.lastError);
         return;
       }
-      resolve(result.profilePicture || '');
+      resolve((result.profilePicture as string) || '');
     });
   });
 }
@@ -409,12 +416,12 @@ async function saveProfilePicture(dataUrl: string): Promise<void> {
 
 function showStatus(message: string, type: 'success' | 'error'): void {
   statusMessage.textContent = message;
-  statusMessage.classList.remove('hidden', 'text-green-600', 'text-red-500');
+  statusMessage.classList.remove('hidden', 'success', 'error');
 
   if (type === 'success') {
-    statusMessage.classList.add('text-green-600');
+    statusMessage.classList.add('success');
   } else {
-    statusMessage.classList.add('text-red-500');
+    statusMessage.classList.add('error');
   }
 
   setTimeout(() => {
@@ -442,10 +449,6 @@ async function handleResetSettings(): Promise<void> {
       pfpChanger: false,
       fakeMsgCounter: false,
       msgCounterValue: 0,
-      autoLogin: false,
-      username: '',
-      password: '',
-      school: '',
     };
 
     await saveSettings(defaultSettings);
@@ -468,9 +471,30 @@ async function handleResetSettings(): Promise<void> {
 
     showStatus('alle instellingen zijn gereset naar standaard', 'success');
 
-    updateActiveTab();
+    reloadAllSmartschoolTabs();
   } catch (error) {
     console.error('failed to reset settings:', error);
     showStatus('error bij het resetten van instellingen', 'error');
   }
+}
+
+function reloadAllSmartschoolTabs(): void {
+  chrome.tabs.query({ url: '*://*.smartschool.be/*' }, (tabs) => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        'failed to query all Smartschool tabs:',
+        chrome.runtime.lastError
+      );
+      return;
+    }
+    tabs.forEach((tab) => {
+      if (tab.id) {
+        chrome.tabs.reload(tab.id, () => {
+          if (chrome.runtime.lastError) {
+            console.error('failed to reload tab:', chrome.runtime.lastError);
+          }
+        });
+      }
+    });
+  });
 }

@@ -53,13 +53,14 @@ export class StorageService {
           return;
         }
         resolve(
-          result.settings || {
-            nameChanger: false,
-            customName: '',
-            pfpChanger: false,
-            fakeMsgCounter: false,
-            msgCounterValue: 0,
-          }
+          (result.settings as Settings) ||
+            ({
+              nameChanger: false,
+              customName: '',
+              pfpChanger: false,
+              fakeMsgCounter: false,
+              msgCounterValue: 0,
+            } as Settings)
         );
       });
     });
@@ -89,7 +90,7 @@ export class StorageService {
           reject(chrome.runtime.lastError);
           return;
         }
-        resolve(result.profilePicture || '');
+        resolve((result.profilePicture as string) || '');
       });
     });
   }
@@ -215,5 +216,5 @@ export const debouncedAutoSave = debounce(
       console.error('auto-save failed:', error);
     }
   },
-  500
+  3000
 );

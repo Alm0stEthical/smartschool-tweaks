@@ -1,0 +1,377 @@
+/* Reset & Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-width: 600px;
+  min-height: 100vh;
+  padding: 12px;
+}
+
+/* Container */
+.container {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+/* Credit Banner */
+.credit-banner {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  text-align: center;
+  padding: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.credit-banner a {
+  text-decoration: none;
+  font-weight: bold;
+  position: relative;
+  color: #00b4d8;
+  transition: all 0.2s ease;
+}
+
+.credit-banner a:hover {
+  color: #90e0ef;
+}
+
+.developer-name {
+  font-size: 1em;
+  display: inline-block;
+  color: #00b4d8;
+}
+
+/* Header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8fafc;
+  padding: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.btn-reset {
+  padding: 8px 12px;
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-reset:hover {
+  background-color: #dc2626;
+}
+
+.btn-save {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-save:hover {
+  background-color: #2563eb;
+}
+
+/* Card */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.section {
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* Toggle Switch */
+.toggle-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.toggle-slider {
+  width: 44px;
+  height: 24px;
+  background-color: #e2e8f0;
+  border-radius: 9999px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.toggle-input:checked + .toggle-slider {
+  background-color: #3b82f6;
+}
+
+.toggle-input:checked + .toggle-slider::after {
+  transform: translateX(20px);
+  border-color: white;
+}
+
+.toggle-input:focus + .toggle-slider {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Input Section */
+.input-section {
+  background-color: #f8fafc;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.input-section.hidden {
+  display: none;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.input-field {
+  height: 32px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background-color: white;
+  padding: 4px 12px;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s;
+}
+
+.input-field::placeholder {
+  color: #94a3b8;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.input-help {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Profile Picture Section */
+.pfp-section {
+  background-color: #f8fafc;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 8px;
+  border: 2px dashed #e2e8f0;
+  transition: all 0.2s;
+}
+
+.pfp-section.hidden {
+  display: none;
+}
+
+.pfp-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-input-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.file-input-label {
+  cursor: pointer;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: #334155;
+  transition: background-color 0.15s;
+}
+
+.file-input-label:hover {
+  background-color: #f8fafc;
+}
+
+.file-input-label input {
+  display: none;
+}
+
+.file-name {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.pfp-preview-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pfp-placeholder {
+  height: 64px;
+  width: 64px;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e2e8f0;
+}
+
+.pfp-placeholder svg {
+  height: 32px;
+  width: 32px;
+  color: #94a3b8;
+}
+
+.pfp-preview {
+  height: 64px;
+  width: 64px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.pfp-preview.hidden {
+  display: none;
+}
+
+/* Status Message */
+.status-message {
+  text-align: center;
+  padding: 8px 16px;
+}
+
+.status-message.hidden {
+  display: none;
+}
+
+.status-message.success {
+  color: #16a34a;
+}
+
+.status-message.error {
+  color: #ef4444;
+}
+
+/* Utility Classes */
+.hidden {
+  display: none;
+}
+
+.text-center {
+  text-align: center;
+}

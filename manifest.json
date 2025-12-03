@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smartschool Tweaks",
-  "version": "2.0.0",
+  "version": "2.1",
   "description": "Verander je naam, profielfoto en aantal berichten.",
   "permissions": ["storage", "activeTab", "scripting", "declarativeNetRequest"],
   "host_permissions": ["*://*.smartschool.be/*"],

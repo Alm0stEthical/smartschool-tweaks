@@ -1,21 +1,16 @@
 {
   "name": "smartschool-tweaks",
-  "version": "2.0.0",
-  "main": "dist/index.js",
   "scripts": {
-    "build": "postcss public/styles.css -o public/styles.css && bun build ./src/background.ts ./src/content.ts ./src/index.ts --outdir ./dist --target browser --minify && powershell -Command \"Compress-Archive -Path manifest.json, index.html, dist, icons, public -DestinationPath smartschool-tweaks.zip -Force\"",
+    "build": "bun build ./src/background.ts ./src/content.ts ./src/index.ts --outdir ./dist --target browser --minify && powershell -Command \"Copy-Item src/styles.css dist/styles.css\" && powershell -Command \"Compress-Archive -Path manifest.json, index.html, dist, icons -DestinationPath smartschool-tweaks.zip -Force\"",
     "dev": "bun build --watch ./src/background.ts ./src/content.ts ./src/index.ts --outdir ./dist --target browser",
-    "css:watch": "postcss public/styles.css -o public/styles.css --watch",
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "postcss-cli": "^11.0.1",
-    "prettier": "^3.6.2",
-    "typescript": "^5.9.2"
+    "@types/chrome": "^0.1.32",
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.13",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13"
+    "@types/node": "^24.10.1"
   }
 }

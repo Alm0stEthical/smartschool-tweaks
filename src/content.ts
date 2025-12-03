@@ -2,7 +2,7 @@ import { Settings } from './types';
 
 let globalSettings: Settings | null = null;
 let globalProfilePicture: string = '';
-let profileImageURLCache: Set<string> = new Set();
+let currentUserPhotoUrl: string = '';
 let nameChangeAttempts = 0;
 
 console.log('[smartschool tweaks] content script loaded');
@@ -24,6 +24,8 @@ console.log('[smartschool tweaks] content script loaded');
     }
 
     if (globalSettings?.pfpChanger) {
+      applyHidingStyle();
+
       globalProfilePicture = await getProfilePicture();
 
       if (globalProfilePicture) {
@@ -48,43 +50,107 @@ console.log('[smartschool tweaks] content script loaded');
   }
 })();
 
+function detectCurrentUserPhotoUrl(): string {
+  const profileButton = document.querySelector('.topnav__btn--profile img');
+  if (profileButton instanceof HTMLImageElement && profileButton.src) {
+    const src = profileButton.src;
+    if (src.includes('userpicture') || src.includes('hashimage/hash')) {
+      console.log('[smartschool tweaks] detected current user photo URL:', src);
+      return src;
+    }
+  }
+
+  const profileImages = document.querySelectorAll(
+    'img[src*="userpicture"], img[src*="hashimage/hash"]'
+  );
+  for (const img of profileImages) {
+    if (img instanceof HTMLImageElement) {
+      const parent = img.closest(
+        '.topnav__btn--profile, .user-profile, .profile-header'
+      );
+      if (parent) {
+        console.log(
+          '[smartschool tweaks] detected current user photo URL from profile area:',
+          img.src
+        );
+        return img.src;
+      }
+    }
+  }
+
+  return '';
+}
+
 function setupImageReplacement(): void {
   if (!globalProfilePicture) return;
 
-  const hideImagesStyle = document.createElement('style');
-  hideImagesStyle.textContent = `
-    img[src*="userpicture"], img[src*="hashimage/hash"], img[src*="User/Userimage"] {
-      opacity: 0 !important;
-      transition: opacity 0.1s;
-    }
-    [style*="userpicture"], [style*="hashimage/hash"], [style*="User/Userimage"] {
-      opacity: 0 !important;
-      transition: opacity 0.1s;
-    }
-  `;
+  currentUserPhotoUrl = detectCurrentUserPhotoUrl();
 
-  if (document.head) {
-    document.head.appendChild(hideImagesStyle);
-  } else {
-    const observer = new MutationObserver(() => {
-      if (document.head) {
-        document.head.appendChild(hideImagesStyle);
-        observer.disconnect();
+  if (!currentUserPhotoUrl) {
+    console.log(
+      '[smartschool tweaks] could not detect current user photo URL, will retry...'
+    );
+    setTimeout(() => {
+      currentUserPhotoUrl = detectCurrentUserPhotoUrl();
+      if (currentUserPhotoUrl) {
+        console.log(
+          '[smartschool tweaks] current user photo URL detected on retry'
+        );
+        requestAnimationFrame(() => {
+          replaceAllProfileImages();
+          setTimeout(removeHidingStyle, 300);
+        });
       }
-    });
-    observer.observe(document, { childList: true, subtree: true });
+    }, 500);
   }
 
   requestAnimationFrame(() => {
     replaceAllProfileImages();
-
-    setTimeout(() => {
-      hideImagesStyle.remove();
-    }, 300);
-
     setupImageObservers();
     setupPeriodicChecker();
+
+    setTimeout(removeHidingStyle, 300);
   });
+}
+
+let hidingStyleElement: HTMLStyleElement | null = null;
+
+function applyHidingStyle(): void {
+  if (hidingStyleElement) return;
+
+  hidingStyleElement = document.createElement('style');
+  hidingStyleElement.setAttribute('data-smartschool-tweaks', 'hiding');
+  hidingStyleElement.textContent = `
+    .topnav__btn--profile img[src*="userpicture"],
+    .topnav__btn--profile img[src*="hashimage/hash"],
+    .topnav__menuitem--img img[src*="userpicture"],
+    .topnav__menuitem--img img[src*="hashimage/hash"] {
+      opacity: 0 !important;
+      transition: none !important;
+    }
+  `;
+
+  if (document.head) {
+    document.head.appendChild(hidingStyleElement);
+  } else {
+    const observer = new MutationObserver(() => {
+      if (document.head && hidingStyleElement) {
+        document.head.appendChild(hidingStyleElement);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
+}
+
+function removeHidingStyle(): void {
+  if (hidingStyleElement) {
+    hidingStyleElement.remove();
+    hidingStyleElement = null;
+  }
 }
 
 function setupImageObservers(): void {
@@ -182,13 +248,23 @@ function shouldReplaceImage(img: HTMLImageElement): boolean {
 
   const src = img.src || '';
 
-  if (src.includes('userpicture') || src.includes('hashimage/hash')) {
-    profileImageURLCache.add(src);
+  if (!currentUserPhotoUrl) {
+    return false;
+  }
+
+  if (src === currentUserPhotoUrl) {
     return true;
   }
 
-  for (const cachedURL of profileImageURLCache) {
-    if (src.includes(cachedURL)) return true;
+  try {
+    const currentUserPhotoUrlObj = new URL(currentUserPhotoUrl);
+    const srcUrlObj = new URL(src);
+
+    if (currentUserPhotoUrlObj.pathname === srcUrlObj.pathname) {
+      return true;
+    }
+  } catch (error) {
+    console.error('[smartschool tweaks] error comparing URLs:', error);
   }
 
   return false;
@@ -201,6 +277,8 @@ function replaceImage(img: HTMLImageElement): void {
   img.setAttribute('data-pfp-replaced', 'true');
 
   img.src = globalProfilePicture;
+
+  img.style.opacity = '1';
 }
 
 function replaceProfileImagesInElement(element: HTMLElement): boolean {
@@ -220,45 +298,80 @@ function replaceProfileImagesInElement(element: HTMLElement): boolean {
 }
 
 function replaceBackgroundImages(element: HTMLElement): boolean {
-  if (!globalProfilePicture) return false;
+  if (!globalProfilePicture || !currentUserPhotoUrl) return false;
 
   let foundBackgroundImages = false;
 
-  const processElement = (el: HTMLElement) => {
-    if (el.hasAttribute('data-bg-replaced')) return false;
+  try {
+    const currentUserPhotoUrlObj = new URL(currentUserPhotoUrl);
+    const currentUserPhotoPath = currentUserPhotoUrlObj.pathname;
 
-    const style = el.getAttribute('style');
-    if (
-      style &&
-      (style.includes('userpicture') || style.includes('hashimage/hash'))
-    ) {
-      el.setAttribute('data-original-style', style);
+    const processElement = (el: HTMLElement) => {
+      if (el.hasAttribute('data-bg-replaced')) return false;
 
-      const newStyle = style.replace(
-        /(background-image:\s*url\(['"]?)(https:\/\/userpicture[^'"')]+|[^'"')]*hashimage\/hash[^'"')]+)(['"]?\))/gi,
-        `$1${globalProfilePicture}$3`
-      );
+      const style = el.getAttribute('style');
+      if (
+        style &&
+        (style.includes('userpicture') || style.includes('hashimage/hash'))
+      ) {
+        if (
+          style.includes(currentUserPhotoPath) ||
+          style.includes(currentUserPhotoUrl)
+        ) {
+          el.setAttribute('data-original-style', style);
 
-      el.setAttribute('style', newStyle);
-      el.setAttribute('data-bg-replaced', 'true');
+          const escapedUrl = currentUserPhotoUrl.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+          );
+          const escapedPath = currentUserPhotoPath.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+          );
 
-      return true;
-    }
-    return false;
-  };
+          let newStyle = style.replace(
+            new RegExp(
+              `(background-image:\\s*url\\(['"]?)${escapedUrl}(['"]?\\))`,
+              'gi'
+            ),
+            `$1${globalProfilePicture}$2`
+          );
 
-  if (processElement(element)) {
-    foundBackgroundImages = true;
-  }
+          newStyle = newStyle.replace(
+            new RegExp(
+              `(background-image:\\s*url\\(['"]?)[^'"')]*${escapedPath}([^'"')]*['"]?\\))`,
+              'gi'
+            ),
+            `$1${globalProfilePicture}$2`
+          );
 
-  const elementsWithBg = element.querySelectorAll('[style*=background]');
-  elementsWithBg.forEach((bgEl) => {
-    if (bgEl instanceof HTMLElement) {
-      if (processElement(bgEl)) {
-        foundBackgroundImages = true;
+          el.setAttribute('style', newStyle);
+          el.setAttribute('data-bg-replaced', 'true');
+
+          return true;
+        }
       }
+      return false;
+    };
+
+    if (processElement(element)) {
+      foundBackgroundImages = true;
     }
-  });
+
+    const elementsWithBg = element.querySelectorAll('[style*=background]');
+    elementsWithBg.forEach((bgEl) => {
+      if (bgEl instanceof HTMLElement) {
+        if (processElement(bgEl)) {
+          foundBackgroundImages = true;
+        }
+      }
+    });
+  } catch (error) {
+    console.error(
+      '[smartschool tweaks] error replacing background images:',
+      error
+    );
+  }
 
   return foundBackgroundImages;
 }
@@ -640,11 +753,14 @@ async function getSettings(): Promise<Settings> {
         return;
       }
       resolve(
-        result.settings || {
-          nameChanger: false,
-          customName: '',
-          pfpChanger: false,
-        }
+        (result.settings as Settings) ||
+          ({
+            nameChanger: false,
+            customName: '',
+            pfpChanger: false,
+            fakeMsgCounter: false,
+            msgCounterValue: 0,
+          } as Settings)
       );
     });
   });
@@ -661,7 +777,7 @@ async function getProfilePicture(): Promise<string> {
         reject(chrome.runtime.lastError);
         return;
       }
-      resolve(result.profilePicture || '');
+      resolve((result.profilePicture as string) || '');
     });
   });
 }

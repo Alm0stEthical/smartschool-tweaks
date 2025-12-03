@@ -4,39 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smartschool Tweaks</title>
-    <link rel="stylesheet" href="public/styles.css" />
-    <style>
-      .credit-banner {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: white;
-        text-align: center;
-        padding: 6px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 8px;
-        border-radius: 4px;
-      }
-      .credit-banner a {
-        text-decoration: none;
-        font-weight: bold;
-        position: relative;
-        color: #00b4d8;
-        transition: all 0.2s ease;
-      }
-      .credit-banner a:hover {
-        color: #90e0ef;
-      }
-      .developer-name {
-        font-size: 1em;
-        display: inline-block;
-        color: #00b4d8;
-      }
-    </style>
+    <link rel="stylesheet" href="dist/styles.css" />
   </head>
-  <body class="bg-slate-50 text-slate-900 min-w-[600px] min-h-screen p-3">
-    <div class="container mx-auto max-w-3xl">
+  <body>
+    <div class="container">
       <div class="credit-banner">
         Gemaakt door de enige echte
         <a
@@ -47,128 +18,79 @@
         >
       </div>
 
-      <div
-        class="sticky top-0 z-10 bg-slate-50 p-2 mb-2 flex justify-between items-center"
-      >
-        <h1 class="text-lg font-bold text-primary">Smartschool Tweaks</h1>
-        <div class="flex items-center gap-2">
-          <div class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-            v2.0.0
-          </div>
-          <button
-            id="reset-settings"
-            class="px-3 py-2 text-white font-medium rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer"
-            style="background-color: #ef4444; border: none"
-            onmouseover="this.style.backgroundColor='#dc2626'"
-            onmouseout="this.style.backgroundColor='#ef4444'"
-          >
-            Reset
-          </button>
-          <button
-            id="save-settings"
-            class="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
-          >
-            Opslaan
-          </button>
+      <div class="header">
+        <h1>Smartschool Tweaks</h1>
+        <div class="header-actions">
+          <div class="version-badge">v2.0.0</div>
+          <button id="reset-settings" class="btn-reset">Reset</button>
+          <button id="save-settings" class="btn-save">Opslaan</button>
         </div>
       </div>
 
-      <div
-        class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden"
-      >
-        <div class="p-4 space-y-4">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <h2 class="text-base font-medium text-slate-800">
-                Verander je naam
-              </h2>
-              <label class="relative inline-flex items-center cursor-pointer">
+      <div class="card">
+        <div class="card-content">
+          <div class="section">
+            <div class="section-header">
+              <h2 class="section-title">Verander je naam</h2>
+              <label class="toggle-wrapper">
                 <input
                   type="checkbox"
                   id="name-changer-toggle"
-                  class="sr-only peer"
+                  class="toggle-input"
                 />
-                <div
-                  class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
-                ></div>
+                <div class="toggle-slider"></div>
               </label>
             </div>
 
-            <div id="name-section" class="bg-slate-50 rounded p-2 hidden">
-              <div class="space-y-1">
-                <div class="grid gap-1">
-                  <label
-                    for="custom-name"
-                    class="text-xs font-medium text-slate-700"
-                    >Aangepaste naam</label
-                  >
-                  <input
-                    type="text"
-                    id="custom-name"
-                    class="h-8 w-full rounded border border-slate-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Je aangepaste naam"
-                  />
-                </div>
+            <div id="name-section" class="input-section hidden">
+              <div class="input-group">
+                <label for="custom-name" class="input-label"
+                  >Aangepaste naam</label
+                >
+                <input
+                  type="text"
+                  id="custom-name"
+                  class="input-field"
+                  placeholder="Je aangepaste naam"
+                />
               </div>
             </div>
           </div>
 
-          <div class="pt-3 border-t border-slate-200">
-            <div class="flex items-center justify-between mb-2">
-              <h2 class="text-base font-medium text-slate-800">
-                Verander je profielfoto
-              </h2>
-              <label class="relative inline-flex items-center cursor-pointer">
+          <div class="section">
+            <div class="section-header">
+              <h2 class="section-title">Verander je profielfoto</h2>
+              <label class="toggle-wrapper">
                 <input
                   type="checkbox"
                   id="pfp-changer-toggle"
-                  class="sr-only peer"
+                  class="toggle-input"
                 />
-                <div
-                  class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
-                ></div>
+                <div class="toggle-slider"></div>
               </label>
             </div>
 
-            <div
-              id="pfp-changer-section"
-              class="bg-slate-50 rounded p-3 hidden transition-all duration-200 border-2 border-dashed border-slate-200"
-            >
-              <div class="space-y-3">
-                <div class="grid gap-1">
-                  <label
-                    for="customPfp"
-                    class="text-xs font-medium text-slate-700 flex items-center gap-1"
-                    ><span>Upload nieuwe afbeelding</span>
-                    <span class="text-primary text-xs"
-                      >(Sleep & drop of klik)</span
-                    ></label
-                  >
-                  <div class="flex gap-3 items-center">
-                    <label
-                      class="cursor-pointer bg-white border border-slate-300 rounded px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
-                    >
+            <div id="pfp-changer-section" class="pfp-section hidden">
+              <div class="pfp-content">
+                <div class="input-group">
+                  <label class="input-label">
+                    <span>Upload nieuwe afbeelding</span>
+                    <span style="color: #3b82f6">(Sleep & drop of klik)</span>
+                  </label>
+                  <div class="file-input-wrapper">
+                    <label class="file-input-label">
                       Kies bestand
-                      <input
-                        type="file"
-                        id="pfpFileInput"
-                        accept="image/*"
-                        class="hidden"
-                      />
+                      <input type="file" id="pfpFileInput" accept="image/*" />
                     </label>
-                    <span id="pfpFileName" class="text-xs text-slate-500"
+                    <span id="pfpFileName" class="file-name"
                       >Geen bestand gekozen</span
                     >
                   </div>
                 </div>
-                <div class="flex items-center justify-center">
-                  <div
-                    id="pfpPlaceholder"
-                    class="h-16 w-16 rounded-full overflow-hidden flex items-center justify-center bg-slate-200"
-                  >
+                <div class="pfp-preview-wrapper">
+                  <div id="pfpPlaceholder" class="pfp-placeholder">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      class="h-8 w-8 text-slate-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -183,11 +105,11 @@
                   </div>
                   <img
                     id="pfpPreview"
-                    class="h-16 w-16 rounded-full object-cover hidden"
+                    class="pfp-preview hidden"
                     alt="Profielfoto voorbeeld"
                   />
                 </div>
-                <p class="text-xs text-slate-500 text-center">
+                <p class="input-help text-center">
                   Afbeelding wordt automatisch opgeslagen zonder op de Opslaan
                   knop te drukken
                 </p>
@@ -195,53 +117,41 @@
             </div>
           </div>
 
-          <div class="pt-3 border-t border-slate-200">
-            <div class="flex items-center justify-between mb-2">
-              <h2 class="text-base font-medium text-slate-800">Berichten</h2>
-              <label class="relative inline-flex items-center cursor-pointer">
+          <div class="section">
+            <div class="section-header">
+              <h2 class="section-title">Berichten</h2>
+              <label class="toggle-wrapper">
                 <input
                   type="checkbox"
                   id="fake-msg-counter-toggle"
-                  class="sr-only peer"
+                  class="toggle-input"
                 />
-                <div
-                  class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
-                ></div>
+                <div class="toggle-slider"></div>
               </label>
             </div>
 
-            <div
-              id="fake-msg-counter-section"
-              class="bg-slate-50 rounded p-2 hidden"
-            >
-              <div class="space-y-1">
-                <div class="grid gap-1">
-                  <label
-                    for="msg-counter-value"
-                    class="text-xs font-medium text-slate-700"
-                    >Aantal berichten</label
-                  >
-                  <input
-                    type="number"
-                    id="msg-counter-value"
-                    min="0"
-                    class="h-8 w-full rounded border border-slate-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="0"
-                  />
-                  <p class="text-xs text-slate-500">
-                    Dit getal zal worden weergegeven als het aantal ongelezen
-                    berichten.
-                  </p>
-                </div>
+            <div id="fake-msg-counter-section" class="input-section hidden">
+              <div class="input-group">
+                <label for="msg-counter-value" class="input-label"
+                  >Aantal berichten</label
+                >
+                <input
+                  type="number"
+                  id="msg-counter-value"
+                  min="0"
+                  class="input-field"
+                  placeholder="0"
+                />
+                <p class="input-help">
+                  Dit getal zal worden weergegeven als het aantal ongelezen
+                  berichten.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div
-          id="status-message"
-          class="hidden text-center py-2 px-4 text-green-600"
-        ></div>
+        <div id="status-message" class="status-message hidden"></div>
       </div>
     </div>
     <script src="dist/index.js"></script>
