@@ -1,15 +1,16 @@
-import { Settings } from './types';
-import { STORAGE_KEYS } from './constants';
+import { STORAGE_KEYS } from "./constants";
+import type { Settings } from "./types";
 
-export function debounce<T extends (...args: any[]) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
 ): T {
-  let timeout: NodeJS.Timeout;
-  return ((...args: any[]) => {
+  let timeout: ReturnType<typeof setTimeout>;
+  const debounced = (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
-  }) as T;
+  };
+  return debounced as T;
 }
 
 export function waitForElement(
@@ -43,123 +44,118 @@ export function waitForElement(
   });
 }
 
-export class StorageService {
-  static async getSettings(): Promise<Settings> {
-    return new Promise((resolve, reject) => {
-      chrome.storage.sync.get(STORAGE_KEYS.SETTINGS, (result) => {
+export function getSettings(): Promise<Settings> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(STORAGE_KEYS.SETTINGS, (result) => {
+      if (chrome.runtime.lastError) {
+        console.error("failed to get settings:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve(
+        (result.settings as Settings) || {
+          nameChanger: false,
+          customName: "",
+          pfpChanger: false,
+          fakeMsgCounter: false,
+          msgCounterValue: 0,
+        }
+      );
+    });
+  });
+}
+
+export function saveSettings(settings: Settings): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set({ [STORAGE_KEYS.SETTINGS]: settings }, () => {
+      if (chrome.runtime.lastError) {
+        console.error("failed to save settings:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+export function getProfilePicture(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(STORAGE_KEYS.PROFILE_PICTURE, (result) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          "failed to get profile picture:",
+          chrome.runtime.lastError
+        );
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve((result.profilePicture as string) || "");
+    });
+  });
+}
+
+export function saveProfilePicture(dataUrl: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set(
+      { [STORAGE_KEYS.PROFILE_PICTURE]: dataUrl },
+      () => {
         if (chrome.runtime.lastError) {
-          console.error('failed to get settings:', chrome.runtime.lastError);
+          console.error(
+            "failed to save profile picture:",
+            chrome.runtime.lastError
+          );
           reject(chrome.runtime.lastError);
           return;
         }
-        resolve(
-          (result.settings as Settings) ||
-            ({
-              nameChanger: false,
-              customName: '',
-              pfpChanger: false,
-              fakeMsgCounter: false,
-              msgCounterValue: 0,
-            } as Settings)
-        );
-      });
-    });
-  }
+        resolve();
+      }
+    );
+  });
+}
 
-  static async saveSettings(settings: Settings): Promise<void> {
-    return new Promise((resolve, reject) => {
-      chrome.storage.sync.set({ [STORAGE_KEYS.SETTINGS]: settings }, () => {
+export function sendMessageToActiveTab(message: unknown): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        console.error("failed to query tabs:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
+
+      const activeTab = tabs[0];
+      if (!activeTab?.id) {
+        reject(new Error("no active tab found"));
+        return;
+      }
+
+      chrome.tabs.sendMessage(activeTab.id, message, () => {
         if (chrome.runtime.lastError) {
-          console.error('failed to save settings:', chrome.runtime.lastError);
+          console.error(
+            "failed to send message to tab:",
+            chrome.runtime.lastError
+          );
           reject(chrome.runtime.lastError);
           return;
         }
         resolve();
       });
     });
-  }
-
-  static async getProfilePicture(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      chrome.storage.local.get(STORAGE_KEYS.PROFILE_PICTURE, (result) => {
-        if (chrome.runtime.lastError) {
-          console.error(
-            'failed to get profile picture:',
-            chrome.runtime.lastError
-          );
-          reject(chrome.runtime.lastError);
-          return;
-        }
-        resolve((result.profilePicture as string) || '');
-      });
-    });
-  }
-
-  static async saveProfilePicture(dataUrl: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      chrome.storage.local.set(
-        { [STORAGE_KEYS.PROFILE_PICTURE]: dataUrl },
-        () => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              'failed to save profile picture:',
-              chrome.runtime.lastError
-            );
-            reject(chrome.runtime.lastError);
-            return;
-          }
-          resolve();
-        }
-      );
-    });
-  }
+  });
 }
 
-export class TabService {
-  static async sendMessageToActiveTab(message: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (chrome.runtime.lastError) {
-          console.error('failed to query tabs:', chrome.runtime.lastError);
-          reject(chrome.runtime.lastError);
-          return;
-        }
+export function isSmartschoolTab(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        console.error("failed to query tabs:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
 
-        const activeTab = tabs[0];
-        if (!activeTab?.id) {
-          reject(new Error('no active tab found'));
-          return;
-        }
-
-        chrome.tabs.sendMessage(activeTab.id, message, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              'failed to send message to tab:',
-              chrome.runtime.lastError
-            );
-            reject(chrome.runtime.lastError);
-            return;
-          }
-          resolve();
-        });
-      });
+      const activeTab = tabs[0];
+      resolve(activeTab?.url?.includes("smartschool.be") ?? false);
     });
-  }
-
-  static async isSmartschoolTab(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (chrome.runtime.lastError) {
-          console.error('failed to query tabs:', chrome.runtime.lastError);
-          reject(chrome.runtime.lastError);
-          return;
-        }
-
-        const activeTab = tabs[0];
-        resolve(activeTab?.url?.includes('smartschool.be') || false);
-      });
-    });
-  }
+  });
 }
 
 export function createCleanupManager() {
@@ -181,16 +177,20 @@ export function createCleanupManager() {
     },
 
     cleanup() {
-      cleanupFunctions.forEach((fn) => {
+      for (const fn of cleanupFunctions) {
         try {
           fn();
         } catch (error) {
-          console.error('error during cleanup:', error);
+          console.error("error during cleanup:", error);
         }
-      });
+      }
 
-      intervals.forEach((interval) => clearInterval(interval));
-      observers.forEach((observer) => observer.disconnect());
+      for (const interval of intervals) {
+        clearInterval(interval);
+      }
+      for (const observer of observers) {
+        observer.disconnect();
+      }
 
       cleanupFunctions.length = 0;
       intervals.length = 0;
@@ -200,12 +200,12 @@ export function createCleanupManager() {
 }
 
 export function validateImageFile(file: File): boolean {
-  return file.type.startsWith('image/');
+  return file.type.startsWith("image/");
 }
 
 export function isValidNumber(value: string): boolean {
-  const num = parseInt(value, 10);
-  return !isNaN(num) && num >= 0;
+  const num = Number.parseInt(value, 10);
+  return !Number.isNaN(num) && num >= 0;
 }
 
 export const debouncedAutoSave = debounce(
@@ -213,7 +213,7 @@ export const debouncedAutoSave = debounce(
     try {
       await saveFunction();
     } catch (error) {
-      console.error('auto-save failed:', error);
+      console.error("auto-save failed:", error);
     }
   },
   3000

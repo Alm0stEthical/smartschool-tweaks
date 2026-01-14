@@ -1,4 +1,4 @@
-export type Settings = {
+export interface Settings {
   nameChanger: boolean;
   customName: string;
 
@@ -6,4 +6,4 @@ export type Settings = {
 
   fakeMsgCounter: boolean;
   msgCounterValue: number;
-};
+}

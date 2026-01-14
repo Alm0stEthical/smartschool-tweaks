@@ -1,79 +1,89 @@
-import { Settings } from './types';
-import { debouncedAutoSave } from './utils';
+import type { Settings } from "./types";
+import { debouncedAutoSave } from "./utils";
 
 const nameChangerToggle = document.getElementById(
-  'name-changer-toggle'
+  "name-changer-toggle"
 ) as HTMLInputElement;
-const nameSection = document.getElementById('name-section') as HTMLDivElement;
+const nameSection = document.getElementById("name-section") as HTMLDivElement;
 const customNameInput = document.getElementById(
-  'custom-name'
+  "custom-name"
 ) as HTMLInputElement;
 
 const pfpChangerToggle = document.getElementById(
-  'pfp-changer-toggle'
+  "pfp-changer-toggle"
 ) as HTMLInputElement;
 const pfpChangerSection = document.getElementById(
-  'pfp-changer-section'
+  "pfp-changer-section"
 ) as HTMLDivElement;
 const pfpFileInput = document.getElementById(
-  'pfpFileInput'
+  "pfpFileInput"
 ) as HTMLInputElement;
-const pfpFileName = document.getElementById('pfpFileName') as HTMLSpanElement;
-const pfpPreview = document.getElementById('pfpPreview') as HTMLImageElement;
-const pfpPlaceholder = document.getElementById('pfpPlaceholder') as HTMLElement;
+const pfpFileName = document.getElementById("pfpFileName") as HTMLSpanElement;
+const pfpPreview = document.getElementById("pfpPreview") as HTMLImageElement;
+const pfpPlaceholder = document.getElementById("pfpPlaceholder") as HTMLElement;
 
 const fakeMsgCounterToggle = document.getElementById(
-  'fake-msg-counter-toggle'
+  "fake-msg-counter-toggle"
 ) as HTMLInputElement;
 const fakeMsgCounterSection = document.getElementById(
-  'fake-msg-counter-section'
+  "fake-msg-counter-section"
 ) as HTMLDivElement;
 const msgCounterValueInput = document.getElementById(
-  'msg-counter-value'
+  "msg-counter-value"
 ) as HTMLInputElement;
 
 const saveButton = document.getElementById(
-  'save-settings'
+  "save-settings"
 ) as HTMLButtonElement;
 const resetButton = document.getElementById(
-  'reset-settings'
+  "reset-settings"
 ) as HTMLButtonElement;
 const statusMessage = document.getElementById(
-  'status-message'
+  "status-message"
 ) as HTMLDivElement;
+const confirmModal = document.getElementById("confirm-modal") as HTMLDivElement;
+const confirmMessage = document.getElementById(
+  "confirm-message"
+) as HTMLParagraphElement;
+const confirmConfirmButton = document.getElementById(
+  "confirm-confirm"
+) as HTMLButtonElement;
+const confirmCancelButton = document.getElementById(
+  "confirm-cancel"
+) as HTMLButtonElement;
 
 let isInitialLoad = true;
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     const settings = await getSettings();
 
-    nameChangerToggle.checked = settings.nameChanger || false;
+    nameChangerToggle.checked = settings.nameChanger;
     if (settings.nameChanger) {
-      customNameInput.value = settings.customName || '';
-      nameSection.classList.remove('hidden');
+      customNameInput.value = settings.customName || "";
+      nameSection.classList.remove("hidden");
     }
 
-    pfpChangerToggle.checked = settings.pfpChanger || false;
+    pfpChangerToggle.checked = settings.pfpChanger;
     if (settings.pfpChanger) {
-      pfpChangerSection.classList.remove('hidden');
+      pfpChangerSection.classList.remove("hidden");
 
       const pfpData = await getProfilePicture();
       if (pfpData) {
         pfpPreview.src = pfpData;
-        pfpPreview.classList.remove('hidden');
-        pfpPlaceholder.classList.add('hidden');
-        pfpFileName.textContent = 'Huidige afbeelding';
+        pfpPreview.classList.remove("hidden");
+        pfpPlaceholder.classList.add("hidden");
+        pfpFileName.textContent = "Huidige afbeelding";
       }
     }
 
-    fakeMsgCounterToggle.checked = settings.fakeMsgCounter || false;
+    fakeMsgCounterToggle.checked = settings.fakeMsgCounter;
     if (settings.fakeMsgCounter) {
       msgCounterValueInput.value = (settings.msgCounterValue || 0).toString();
-      fakeMsgCounterSection.classList.remove('hidden');
+      fakeMsgCounterSection.classList.remove("hidden");
     }
 
-    console.log('Settings loaded:', settings);
+    console.log("Settings loaded:", settings);
 
     setupEventListeners();
 
@@ -81,106 +91,109 @@ document.addEventListener('DOMContentLoaded', async () => {
       isInitialLoad = false;
     }, 100);
   } catch (error) {
-    console.error('Error loading settings:', error);
-    showStatus('Error bij het laden van instellingen', 'error');
+    console.error("Error loading settings:", error);
+    showStatus("Error bij het laden van instellingen", "error");
   }
 });
 
 function setupEventListeners(): void {
-  nameChangerToggle.addEventListener('change', () => {
+  nameChangerToggle.addEventListener("change", () => {
     if (nameChangerToggle.checked) {
-      nameSection.classList.remove('hidden');
+      nameSection.classList.remove("hidden");
     } else {
-      nameSection.classList.add('hidden');
+      nameSection.classList.add("hidden");
     }
     if (!isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  pfpChangerToggle.addEventListener('change', () => {
+  pfpChangerToggle.addEventListener("change", () => {
     if (pfpChangerToggle.checked) {
-      pfpChangerSection.classList.remove('hidden');
+      pfpChangerSection.classList.remove("hidden");
     } else {
-      pfpChangerSection.classList.add('hidden');
+      pfpChangerSection.classList.add("hidden");
     }
     if (!isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  fakeMsgCounterToggle.addEventListener('change', () => {
+  fakeMsgCounterToggle.addEventListener("change", () => {
     if (fakeMsgCounterToggle.checked) {
-      fakeMsgCounterSection.classList.remove('hidden');
+      fakeMsgCounterSection.classList.remove("hidden");
     } else {
-      fakeMsgCounterSection.classList.add('hidden');
+      fakeMsgCounterSection.classList.add("hidden");
     }
     if (!isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  customNameInput.addEventListener('blur', () => {
+  customNameInput.addEventListener("blur", () => {
     if (!isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  customNameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !isInitialLoad) {
+  customNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  msgCounterValueInput.addEventListener('blur', () => {
+  msgCounterValueInput.addEventListener("blur", () => {
     if (!isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  msgCounterValueInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !isInitialLoad) {
+  msgCounterValueInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !isInitialLoad) {
       debouncedAutoSave(() => saveAllSettings(true));
     }
   });
 
-  pfpFileInput.addEventListener('change', handleProfilePictureChange);
+  pfpFileInput.addEventListener("change", handleProfilePictureChange);
 
   setupDragAndDrop();
 
-  msgCounterValueInput.addEventListener('input', () => {
+  msgCounterValueInput.addEventListener("input", () => {
     let value = msgCounterValueInput.value;
 
-    value = value.replace(/[^0-9]/g, '');
+    value = value.replace(/[^0-9]/g, "");
 
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= 0) {
+    const numValue = Number.parseInt(value, 10);
+    if (!Number.isNaN(numValue) && numValue >= 0) {
       msgCounterValueInput.value = numValue.toString();
     } else {
-      msgCounterValueInput.value = '0';
+      msgCounterValueInput.value = "0";
     }
   });
 
-  saveButton.addEventListener('click', () => saveAllSettings(false));
-  resetButton.addEventListener('click', handleResetSettings);
+  saveButton.addEventListener("click", () => saveAllSettings(false));
+  resetButton.addEventListener("click", handleResetSettings);
 }
 
 function setupDragAndDrop(): void {
   const dropZone = pfpChangerSection;
 
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+  const preventDefaultsEvents = ["dragenter", "dragover", "dragleave", "drop"];
+  for (const eventName of preventDefaultsEvents) {
     dropZone.addEventListener(eventName, preventDefaults, false);
-  });
+  }
 
-  ['dragenter', 'dragover'].forEach((eventName) => {
+  const highlightEvents = ["dragenter", "dragover"];
+  for (const eventName of highlightEvents) {
     dropZone.addEventListener(eventName, highlight, false);
-  });
+  }
 
-  ['dragleave', 'drop'].forEach((eventName) => {
+  const unhighlightEvents = ["dragleave", "drop"];
+  for (const eventName of unhighlightEvents) {
     dropZone.addEventListener(eventName, unhighlight, false);
-  });
+  }
 
-  dropZone.addEventListener('drop', handleDrop, false);
+  dropZone.addEventListener("drop", handleDrop, false);
 
   function preventDefaults(e: Event): void {
     e.preventDefault();
@@ -188,31 +201,33 @@ function setupDragAndDrop(): void {
   }
 
   function highlight(): void {
-    dropZone.classList.add('bg-slate-100');
-    dropZone.classList.remove('bg-slate-50');
-    dropZone.classList.remove('border-slate-200');
-    dropZone.classList.add('border-primary');
+    dropZone.classList.add("bg-slate-100");
+    dropZone.classList.remove("bg-slate-50");
+    dropZone.classList.remove("border-slate-200");
+    dropZone.classList.add("border-primary");
   }
 
   function unhighlight(): void {
-    dropZone.classList.remove('bg-slate-100');
-    dropZone.classList.add('bg-slate-50');
-    dropZone.classList.remove('border-primary');
-    dropZone.classList.add('border-slate-200');
+    dropZone.classList.remove("bg-slate-100");
+    dropZone.classList.add("bg-slate-50");
+    dropZone.classList.remove("border-primary");
+    dropZone.classList.add("border-slate-200");
   }
 
   function handleDrop(e: DragEvent): void {
-    if (!e.dataTransfer) return;
+    if (!e.dataTransfer) {
+      return;
+    }
 
     const dt = e.dataTransfer;
     const files = dt.files;
 
     if (files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         processProfilePicture(file);
       } else {
-        showStatus('Alleen afbeeldingen zijn toegestaan', 'error');
+        showStatus("Alleen afbeeldingen zijn toegestaan", "error");
       }
     }
   }
@@ -225,13 +240,13 @@ function handleProfilePictureChange(event: Event): void {
   if (file) {
     processProfilePicture(file);
   } else {
-    pfpFileName.textContent = 'Geen bestand gekozen';
-    pfpPreview.classList.add('hidden');
-    pfpPlaceholder.classList.remove('hidden');
+    pfpFileName.textContent = "Geen bestand gekozen";
+    pfpPreview.classList.add("hidden");
+    pfpPlaceholder.classList.remove("hidden");
   }
 }
 
-async function processProfilePicture(file: File): Promise<void> {
+function processProfilePicture(file: File): void {
   pfpFileName.textContent = file.name;
 
   const reader = new FileReader();
@@ -239,8 +254,8 @@ async function processProfilePicture(file: File): Promise<void> {
     const result = e.target?.result as string;
     if (result) {
       pfpPreview.src = result;
-      pfpPreview.classList.remove('hidden');
-      pfpPlaceholder.classList.add('hidden');
+      pfpPreview.classList.remove("hidden");
+      pfpPlaceholder.classList.add("hidden");
 
       if (pfpChangerToggle.checked) {
         try {
@@ -254,12 +269,12 @@ async function processProfilePicture(file: File): Promise<void> {
             });
           }
 
-          showStatus('Profielfoto automatisch opgeslagen!', 'success');
+          showStatus("Profielfoto automatisch opgeslagen!", "success");
 
           updateActiveTab();
         } catch (error) {
-          console.error('failed to save profile picture:', error);
-          showStatus('Kon profielfoto niet opslaan', 'error');
+          console.error("failed to save profile picture:", error);
+          showStatus("Kon profielfoto niet opslaan", "error");
         }
       }
     }
@@ -269,14 +284,14 @@ async function processProfilePicture(file: File): Promise<void> {
 
 async function saveAllSettings(isAutoSave = false): Promise<void> {
   try {
-    const msgCounterValue = parseInt(msgCounterValueInput.value, 10);
+    const msgCounterValue = Number.parseInt(msgCounterValueInput.value, 10);
 
     const settings: Settings = {
       nameChanger: nameChangerToggle.checked,
       customName: customNameInput.value,
       pfpChanger: pfpChangerToggle.checked,
       fakeMsgCounter: fakeMsgCounterToggle.checked,
-      msgCounterValue: isNaN(msgCounterValue) ? 0 : msgCounterValue,
+      msgCounterValue: Number.isNaN(msgCounterValue) ? 0 : msgCounterValue,
     };
 
     await saveSettings(settings);
@@ -285,43 +300,43 @@ async function saveAllSettings(isAutoSave = false): Promise<void> {
       showAutoSaveStatus();
       refreshSmartschoolTab();
     } else {
-      showStatus('Instellingen succesvol opgeslagen!', 'success');
+      showStatus("Instellingen succesvol opgeslagen!", "success");
     }
 
     updateActiveTab();
   } catch (error) {
-    console.error('failed to save settings:', error);
-    showStatus('error bij het opslaan van instellingen', 'error');
+    console.error("failed to save settings:", error);
+    showStatus("error bij het opslaan van instellingen", "error");
   }
 }
 
 function updateActiveTab(): void {
   chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     if (chrome.runtime.lastError) {
-      console.error('failed to query tabs:', chrome.runtime.lastError);
+      console.error("failed to query tabs:", chrome.runtime.lastError);
       return;
     }
     const activeTab = tabs[0];
-    if (activeTab?.url?.includes('smartschool.be')) {
+    if (activeTab?.url?.includes("smartschool.be")) {
       try {
         const settings = await getSettings();
         chrome.tabs.sendMessage(
           activeTab.id as number,
           {
-            action: 'applySettings',
+            action: "applySettings",
             settings,
           },
-          (response) => {
+          (_response) => {
             if (chrome.runtime.lastError) {
               console.error(
-                'failed to send message to tab:',
+                "failed to send message to tab:",
                 chrome.runtime.lastError
               );
             }
           }
         );
       } catch (error) {
-        console.error('failed to get settings for tab update:', error);
+        console.error("failed to get settings for tab update:", error);
       }
     }
   });
@@ -331,27 +346,27 @@ function refreshSmartschoolTab(): void {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (chrome.runtime.lastError) {
       console.error(
-        'failed to query tabs for refresh:',
+        "failed to query tabs for refresh:",
         chrome.runtime.lastError
       );
       return;
     }
     const activeTab = tabs[0];
-    if (activeTab?.url?.includes('smartschool.be') && activeTab.id) {
+    if (activeTab?.url?.includes("smartschool.be") && activeTab.id) {
       chrome.tabs.reload(activeTab.id, () => {
         if (chrome.runtime.lastError) {
-          console.error('failed to refresh tab:', chrome.runtime.lastError);
+          console.error("failed to refresh tab:", chrome.runtime.lastError);
         }
       });
     }
   });
 }
 
-async function getSettings(): Promise<Settings> {
+function getSettings(): Promise<Settings> {
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.get('settings', (result) => {
+    chrome.storage.sync.get("settings", (result) => {
       if (chrome.runtime.lastError) {
-        console.error('failed to get settings:', chrome.runtime.lastError);
+        console.error("failed to get settings:", chrome.runtime.lastError);
         reject(chrome.runtime.lastError);
         return;
       }
@@ -359,7 +374,7 @@ async function getSettings(): Promise<Settings> {
         (result.settings as Settings) ||
           ({
             nameChanger: false,
-            customName: '',
+            customName: "",
             pfpChanger: false,
             fakeMsgCounter: false,
             msgCounterValue: 0,
@@ -369,11 +384,11 @@ async function getSettings(): Promise<Settings> {
   });
 }
 
-async function saveSettings(settings: Settings): Promise<void> {
+function saveSettings(settings: Settings): Promise<void> {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.set({ settings }, () => {
       if (chrome.runtime.lastError) {
-        console.error('failed to save settings:', chrome.runtime.lastError);
+        console.error("failed to save settings:", chrome.runtime.lastError);
         reject(chrome.runtime.lastError);
         return;
       }
@@ -382,28 +397,28 @@ async function saveSettings(settings: Settings): Promise<void> {
   });
 }
 
-async function getProfilePicture(): Promise<string> {
+function getProfilePicture(): Promise<string> {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get('profilePicture', (result) => {
+    chrome.storage.local.get("profilePicture", (result) => {
       if (chrome.runtime.lastError) {
         console.error(
-          'failed to get profile picture:',
+          "failed to get profile picture:",
           chrome.runtime.lastError
         );
         reject(chrome.runtime.lastError);
         return;
       }
-      resolve((result.profilePicture as string) || '');
+      resolve((result.profilePicture as string) || "");
     });
   });
 }
 
-async function saveProfilePicture(dataUrl: string): Promise<void> {
+function saveProfilePicture(dataUrl: string): Promise<void> {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({ profilePicture: dataUrl }, () => {
       if (chrome.runtime.lastError) {
         console.error(
-          'failed to save profile picture:',
+          "failed to save profile picture:",
           chrome.runtime.lastError
         );
         reject(chrome.runtime.lastError);
@@ -414,28 +429,65 @@ async function saveProfilePicture(dataUrl: string): Promise<void> {
   });
 }
 
-function showStatus(message: string, type: 'success' | 'error'): void {
+function showStatus(message: string, type: "success" | "error"): void {
   statusMessage.textContent = message;
-  statusMessage.classList.remove('hidden', 'success', 'error');
+  statusMessage.classList.remove("hidden", "success", "error");
 
-  if (type === 'success') {
-    statusMessage.classList.add('success');
+  if (type === "success") {
+    statusMessage.classList.add("success");
   } else {
-    statusMessage.classList.add('error');
+    statusMessage.classList.add("error");
   }
 
   setTimeout(() => {
-    statusMessage.classList.add('hidden');
+    statusMessage.classList.add("hidden");
   }, 3000);
 }
 
 function showAutoSaveStatus(): void {
-  showStatus('automatisch opgeslagen', 'success');
+  showStatus("automatisch opgeslagen", "success");
+}
+
+function requestConfirmation(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    confirmMessage.textContent = message;
+    confirmModal.classList.remove("hidden");
+
+    const cleanup = () => {
+      confirmModal.classList.add("hidden");
+      confirmConfirmButton.removeEventListener("click", onConfirm);
+      confirmCancelButton.removeEventListener("click", onCancel);
+      document.removeEventListener("keydown", onKeydown);
+    };
+
+    const onConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+    };
+
+    confirmConfirmButton.addEventListener("click", onConfirm);
+    confirmCancelButton.addEventListener("click", onCancel);
+    document.addEventListener("keydown", onKeydown);
+
+    confirmConfirmButton.focus();
+  });
 }
 
 async function handleResetSettings(): Promise<void> {
-  const confirmed = confirm(
-    'weet je zeker dat je alle instellingen wilt resetten? dit kan niet ongedaan worden gemaakt.'
+  const confirmed = await requestConfirmation(
+    "weet je zeker dat je alle instellingen wilt resetten? dit kan niet ongedaan worden gemaakt."
   );
 
   if (!confirmed) {
@@ -445,7 +497,7 @@ async function handleResetSettings(): Promise<void> {
   try {
     const defaultSettings: Settings = {
       nameChanger: false,
-      customName: '',
+      customName: "",
       pfpChanger: false,
       fakeMsgCounter: false,
       msgCounterValue: 0,
@@ -453,48 +505,48 @@ async function handleResetSettings(): Promise<void> {
 
     await saveSettings(defaultSettings);
 
-    await chrome.storage.local.remove('profilePicture');
+    await chrome.storage.local.remove("profilePicture");
 
     nameChangerToggle.checked = false;
-    nameSection.classList.add('hidden');
-    customNameInput.value = '';
+    nameSection.classList.add("hidden");
+    customNameInput.value = "";
 
     pfpChangerToggle.checked = false;
-    pfpChangerSection.classList.add('hidden');
-    pfpPreview.classList.add('hidden');
-    pfpPlaceholder.classList.remove('hidden');
-    pfpFileName.textContent = 'geen bestand gekozen';
+    pfpChangerSection.classList.add("hidden");
+    pfpPreview.classList.add("hidden");
+    pfpPlaceholder.classList.remove("hidden");
+    pfpFileName.textContent = "geen bestand gekozen";
 
     fakeMsgCounterToggle.checked = false;
-    fakeMsgCounterSection.classList.add('hidden');
-    msgCounterValueInput.value = '0';
+    fakeMsgCounterSection.classList.add("hidden");
+    msgCounterValueInput.value = "0";
 
-    showStatus('alle instellingen zijn gereset naar standaard', 'success');
+    showStatus("alle instellingen zijn gereset naar standaard", "success");
 
     reloadAllSmartschoolTabs();
   } catch (error) {
-    console.error('failed to reset settings:', error);
-    showStatus('error bij het resetten van instellingen', 'error');
+    console.error("failed to reset settings:", error);
+    showStatus("error bij het resetten van instellingen", "error");
   }
 }
 
 function reloadAllSmartschoolTabs(): void {
-  chrome.tabs.query({ url: '*://*.smartschool.be/*' }, (tabs) => {
+  chrome.tabs.query({ url: "*://*.smartschool.be/*" }, (tabs) => {
     if (chrome.runtime.lastError) {
       console.error(
-        'failed to query all Smartschool tabs:',
+        "failed to query all Smartschool tabs:",
         chrome.runtime.lastError
       );
       return;
     }
-    tabs.forEach((tab) => {
+    for (const tab of tabs) {
       if (tab.id) {
         chrome.tabs.reload(tab.id, () => {
           if (chrome.runtime.lastError) {
-            console.error('failed to reload tab:', chrome.runtime.lastError);
+            console.error("failed to reload tab:", chrome.runtime.lastError);
           }
         });
       }
-    });
+    }
   });
 }

@@ -1,24 +1,24 @@
-import { Settings } from './types';
+import type { Settings } from "./types";
 
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(() => {
   const defaultSettings: Settings = {
     nameChanger: false,
-    customName: '',
+    customName: "",
     pfpChanger: false,
     fakeMsgCounter: false,
     msgCounterValue: 0,
   };
 
-  chrome.storage.sync.get('settings', (result) => {
+  chrome.storage.sync.get("settings", (result) => {
     if (chrome.runtime.lastError) {
-      console.error('storage error:', chrome.runtime.lastError);
+      console.error("storage error:", chrome.runtime.lastError);
       return;
     }
     if (!result.settings) {
       chrome.storage.sync.set({ settings: defaultSettings }, () => {
         if (chrome.runtime.lastError) {
           console.error(
-            'failed to set default settings:',
+            "failed to set default settings:",
             chrome.runtime.lastError
           );
         }
@@ -40,15 +40,15 @@ function disableProfilePictureBlocking(): void {
       addRules: [],
     })
     .catch((error) => {
-      console.error('error removing blocking rules:', error);
+      console.error("error removing blocking rules:", error);
     });
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'saveSettings') {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === "saveSettings") {
     chrome.storage.sync.set({ settings: message.settings }, () => {
       if (chrome.runtime.lastError) {
-        console.error('failed to save settings:', chrome.runtime.lastError);
+        console.error("failed to save settings:", chrome.runtime.lastError);
         sendResponse({
           success: false,
           error: chrome.runtime.lastError.message,
@@ -57,20 +57,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (chrome.runtime.lastError) {
-          console.error('failed to query tabs:', chrome.runtime.lastError);
+          console.error("failed to query tabs:", chrome.runtime.lastError);
           return;
         }
         if (tabs[0]?.id) {
           chrome.tabs.sendMessage(
             tabs[0].id,
             {
-              action: 'applySettings',
+              action: "applySettings",
               settings: message.settings,
             },
-            (response) => {
+            (_response) => {
               if (chrome.runtime.lastError) {
                 console.error(
-                  'failed to send message to tab:',
+                  "failed to send message to tab:",
                   chrome.runtime.lastError
                 );
               }
@@ -84,11 +84,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message.action === 'saveProfilePicture') {
+  if (message.action === "saveProfilePicture") {
     chrome.storage.local.set({ profilePicture: message.dataUrl }, () => {
       if (chrome.runtime.lastError) {
         console.error(
-          'failed to save profile picture:',
+          "failed to save profile picture:",
           chrome.runtime.lastError
         );
         sendResponse({
@@ -99,20 +99,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (chrome.runtime.lastError) {
-          console.error('failed to query tabs:', chrome.runtime.lastError);
+          console.error("failed to query tabs:", chrome.runtime.lastError);
           return;
         }
         if (tabs[0]?.id) {
           chrome.tabs.sendMessage(
             tabs[0].id,
             {
-              action: 'applySettings',
+              action: "applySettings",
               settings: message.settings,
             },
-            (response) => {
+            (_response) => {
               if (chrome.runtime.lastError) {
                 console.error(
-                  'failed to send message to tab:',
+                  "failed to send message to tab:",
                   chrome.runtime.lastError
                 );
               }
